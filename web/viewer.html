@@ -29,19 +29,41 @@ See https://github.com/adobe-type-tools/cmap-resources
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>PDF.js viewer</title>
 
-
   <link rel="stylesheet" href="viewer.css">
 
+
+  <style>
+    .ui-resizable-helper,
+    .boxer-hl,
+    .annotator-raw {
+      border: 1px solid #e43535;
+    }
+
+    .annotator-hl {
+      background: rgba(255, 10, 10, 1) !important;
+    }
+
+    .annotator-pdf-hl {
+      background: rgba(255, 10, 10, 0.32) !important;
+    }
+
+
+    .textLayer>span {
+      color: transparent;
+      position: absolute;
+      white-space: pre;
+      cursor: text;
+      transform-origin: 0% 0%;
+    }
+
+    .toolbarButton.active {
+      background: #676767;
+    }
+  </style>
 
   <!-- This snippet is used in production (included from viewer.html) -->
   <link rel="resource" type="application/l10n" href="locale/locale.properties">
   <script src="../build/pdf.js"></script>
-
-
-
-
-
-
 
   <link rel="stylesheet" href="../css/jquery-ui.css" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
@@ -59,9 +81,56 @@ See https://github.com/adobe-type-tools/cmap-resources
   <script src="viewer.js"></script>
 
   <script>
+    var MODE = 'text';
+
     document.addEventListener('textlayerrendered', function (event) {
-      console.log(event);
+      const num = event.detail.pageNumber;
+      const content = $('#viewer').find('.page:nth-child(' + num + ')')
+      if (content.data('annotator')) {
+        content.removeData('annotator');
+      }
+      content.annotator();
+      content.data('annotator').setupAnnotation = function (annotation) {
+        if (annotation.ranges !== undefined || $.isEmptyObject(annotation)) {
+          return content.data('annotator').__proto__.setupAnnotation.call(content.data('annotator'), annotation);
+        }
+      };
+      content.annotator('addPlugin', 'PdfAnnotator');
+      content.annotator('addPlugin', 'Store', {
+        prefix: '../store.php?action=',
+        annotationData: {
+          'page': num
+        },
+        loadFromSearch: {
+          'page': num
+        }
+      });
+
+      content.data('annotator').subscribe("annotationsLoaded", function (annotation) {
+        if (MODE == 'text') {
+          content.find('.annotator-wrapper').boxer('destroy');
+        }
+      });
     }, true);
+
+
+    $(document).on('ready', function () {
+      $('.mode-' + MODE).addClass('active');
+      $('.toggleMode').on('click', function (e) {
+        e.preventDefault();
+        if ($(this).data('mode') === 'text') {
+          MODE = 'text';
+          $(this).addClass('active');
+          $('.mode-pdf').removeClass('active');
+          $('.page').find('.annotator-wrapper').boxer('destroy');
+        } else {
+          MODE = 'pdf';
+          $(this).addClass('active');
+          $('.mode-text').removeClass('active');
+          $('.page').find('.annotator-wrapper').boxer();
+        }
+      });
+    });
 
   </script>
 
@@ -292,6 +361,10 @@ See https://github.com/adobe-type-tools/cmap-resources
               </button>
             </div>
             <div id="toolbarViewerMiddle">
+              <button data-mode="text" class="toolbarButton toggleMode mode-text">Text</button>
+              <div class="splitToolbarButtonSeparator"></div>
+              <button data-mode="pdf" class="toolbarButton toggleMode mode-pdf">Pdf</button>
+
               <div class="splitToolbarButton">
                 <button id="zoomOut" class="toolbarButton zoomOut" title="Zoom Out" tabindex="21"
                   data-l10n-id="zoom_out">

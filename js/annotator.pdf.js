@@ -51,7 +51,6 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
                     return '';
                 self.annotationLoader(ann);
             });
-
             enableDragableResizable();
         });
 
@@ -89,10 +88,12 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
         annotator.subscribe("annotationEditorHidden", function () {
             boxEl.find('.annotator-controls .btn-standard-size').remove();
-            setTimeout(function () {
-                boxEl.find('div.annotator-hl').draggable({ disabled: false });
-                boxEl.find('div.annotator-hl').resizable({ disabled: false });
-            }, 2100);
+            if (boxEl.data('MODE') == 'pdf') {
+                setTimeout(function () {
+                    boxEl.find('div.annotator-hl').draggable({ disabled: false });
+                    boxEl.find('div.annotator-hl').resizable({ disabled: false });
+                }, 2100);
+            }
         });
 
         var updateChange = function (e, ele) {
@@ -100,8 +101,8 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             $(annotator.viewer.element).addClass('annotator-hide');
 
             if (e.type == 'resizestop') {
-                $(e.target).css('height', (el.height() + 12 + 'px'));
-                $(e.target).css('width', (el.width() + 12 + 'px'));
+                $(e.target).css('height', (el.height() + 'px'));
+                $(e.target).css('width', (el.width() + 'px'));
             }
 
             var shape = [];
@@ -149,6 +150,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         $(document).on('click', '.annotator-resize-action button.save', function (e) {
             var el = $(this).parent().parent();
             var annotator = el.data('annotator');
+            if (!annotator) return;
             var geometry = [];
             geometry.y = parseInt(el.css('top'));
             geometry.x = parseInt(el.css('left'));
