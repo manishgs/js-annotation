@@ -10,7 +10,9 @@ if (!$annotations) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $annotation = json_decode(file_get_contents("php://input"), true);
-        $annotation['id'] = rand();
+        if (!$annotation['id']) {
+            $annotation['id'] = rand();
+        }
         $annotations[] = $annotation;
         file_put_contents('./annotation.json', json_encode($annotations));
     } catch (Exception $e) {

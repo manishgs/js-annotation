@@ -4258,7 +4258,7 @@
         kind: OptionKind.VIEWER + OptionKind.PREFERENCE
       },
       defaultUrl: {
-        value: 'compressed.tracemonkey-pldi-09.pdf',
+        value: '../compressed.tracemonkey-pldi-09.pdf',
         kind: OptionKind.VIEWER
       },
       defaultZoomValue: {
@@ -4347,7 +4347,7 @@
         kind: OptionKind.API
       },
       cMapUrl: {
-        value: '../web/cmaps/',
+        value: '../cmaps/',
         kind: OptionKind.API
       },
       disableAutoFetch: {
@@ -4396,7 +4396,7 @@
         kind: OptionKind.WORKER
       },
       workerSrc: {
-        value: '../build/pdf.worker.js',
+        value: '../js/pdf.worker.js',
         kind: OptionKind.WORKER
       }
     };

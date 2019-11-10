@@ -23,77 +23,68 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
     PdfAnnotator.prototype.events = {
         'annotationEditorSubmit': 'onAnnotationEditorSubmit'
     };
-    PdfAnnotator.prototype.field = null;
-    PdfAnnotator.prototype.notification = null;
+    PdfAnnotator.prototype.options = {
+        PdfAnnotator: {}
+    };
+
+    function PdfAnnotator(element, options) {
+        this.onAnnotationEditorSubmit = __bind(this.onAnnotationEditorSubmit, this);
+        PdfAnnotator.__super__.constructor.apply(this, arguments);
+    }
+
     PdfAnnotator.prototype.pluginInit = function (options) {
         var annotator = this.annotator;
-        if (!Annotator.supported()) {
-            return;
-        }
         var el = annotator.element;
         var boxEl = el.find('.annotator-wrapper');
         var self = this;
 
-        var enableDragableResizable = function () {
-            el.find('div.annotator-hl').resizable({
-                helper: "ui-resizable-helper", stop: updateChange
-            });
-            el.find('div.annotator-hl').draggable({ cursor: "move", scroll: true, stop: updateChange });
-            boxEl.boxer({ disabled: false });
+        var enableDragableResizable = function (annotation) {
+            if (!annotation.shapes) return;
+            var el = $('.annotator-' + annotation.id);
+            el.resizable({ helper: "ui-resizable-helper", stop: updateChange });
+            el.draggable({ cursor: "move", scroll: true, stop: updateChange });
+        };
+
+        var disableAnnotation = function () {
+            boxEl.boxer({ disabled: true });
+        };
+
+        var enableAnnotation = function () {
+            if ($('body').hasClass('mode_pdf')) {
+                boxEl.boxer({ disabled: false });
+            } else {
+                boxEl.boxer('destroy');
+            }
         };
 
         annotator.subscribe("annotationCreated", enableDragableResizable);
 
-        annotator.subscribe("annotationsLoaded", function (annotation) {
+        annotator.subscribe("annotationsLoaded", function (annotations) {
             boxEl.find('div.annotator-hl').remove();
-            annotation.map(function (ann) {
-                if (ann.shapes === undefined)
-                    return '';
-                self.annotationLoader(ann);
+            annotations.forEach(function (ann) {
+                if (ann.shapes) {
+                    self.annotationLoader(ann);
+                    enableDragableResizable(ann);
+                }
             });
-            enableDragableResizable();
         });
 
         annotator.subscribe("annotationDeleted", function (annotation) {
-            $('div.annotator-hl').each(function () {
-                var obj1 = JSON.stringify($(this).data('annotator'));
-                var obj2 = JSON.stringify(annotation);
-                if (obj1 === obj2) {
-                    $(this).remove();
-                }
-            })
+            $('.annotator-' + annotation.id).remove();
         });
 
         annotator.subscribe("annotationEditorShown", function (editor, annotation) {
-            boxEl.boxer({ disabled: true });
+            if (!annotation.shapes) return;
+            disableAnnotation()
             boxEl.find('div.annotator-hl').draggable({ disabled: true });
             boxEl.find('div.annotator-hl').resizable({ disabled: true });
-
-            if (typeof annotation.box == 'object') {
-                var btnStandard = '<button type="button"  title=" REPACE_ME " class="btn btn-warning' +
-                    ' btn-standard-size" ><span class="glyphicon glyphicon-unchecked" aria-hidden="true"></span></button>';
-                boxEl.find('.annotator-controls').prepend(btnStandard);
-
-                boxEl.find('.annotator-controls .btn-standard-size').on('click', function (e) {
-                    e.preventDefault();
-                    var box = annotation.box;
-                    box.css('height', '25px');
-                    box.css('width', '40px');
-                    var top = parseInt(box.css('top')) + parseInt(box.height());
-                    var left = parseInt(box.css('left')) + parseInt(box.width() / 2);
-                    boxEl.find('.annotator-editor').css({ 'top': top, 'left': left });
-                })
-            }
         });
 
-        annotator.subscribe("annotationEditorHidden", function () {
-            boxEl.find('.annotator-controls .btn-standard-size').remove();
-            if (boxEl.data('MODE') == 'pdf') {
-                setTimeout(function () {
-                    boxEl.find('div.annotator-hl').draggable({ disabled: false });
-                    boxEl.find('div.annotator-hl').resizable({ disabled: false });
-                }, 2100);
-            }
+        annotator.subscribe("annotationEditorHidden", function (editor) {
+            if (!editor.annotation.shapes) return;
+            enableAnnotation()
+            boxEl.find('div.annotator-hl').draggable({ disabled: false });
+            boxEl.find('div.annotator-hl').resizable({ disabled: false });
         });
 
         var updateChange = function (e, ele) {
@@ -111,7 +102,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             shape.height = el.height();
             shape.width = el.width();
 
-            boxEl.boxer({ disabled: true });
+            disableAnnotation();
             $(e.target).find('div.annotator-resize-action').remove();
             boxEl.find('div.annotator-hl').removeClass('resizable-active');
             $(e.target).addClass('resizable-active');
@@ -124,33 +115,21 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             boxEl.find(e.target).resizable({ disabled: false });
         };
 
-        $(document).on('click', '.annotator-resize-action button.cancel', function () {
+        $(boxEl).on('click', '.annotator-resize-action button.cancel', function () {
             var el = $(this).parent().parent();
             var annotator = el.data('annotator');
             var shape = annotator.shapes[0].geometry;
             shape = self.getShape(shape);
             el.css({ top: shape.y, left: shape.x, height: shape.height, width: shape.width });
-
             el.find('.annotator-resize-action').remove();
-            if (boxEl.find('.cancel').length === 0) {
-                boxEl.boxer({ disabled: false });
-            }
-
+            enableAnnotation();
             boxEl.find('div.annotator-hl').draggable({ disabled: false });
             boxEl.find('div.annotator-hl').resizable({ disabled: false });
-
         });
 
-        $(document).on('click', '.annotator-resize-action .standardSize', function () {
-            var el = $(this).parent().parent();
-            el.css('height', '25px');
-            el.css('width', '40px');
-        });
-
-        $(document).on('click', '.annotator-resize-action button.save', function (e) {
+        $(boxEl).on('click', '.annotator-resize-action button.save', function (e) {
             var el = $(this).parent().parent();
             var annotator = el.data('annotator');
-            if (!annotator) return;
             var geometry = [];
             geometry.y = parseInt(el.css('top'));
             geometry.x = parseInt(el.css('left'));
@@ -159,17 +138,9 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             annotator.shapes[0].geometry = self.getGeoInPercentage(geometry);
             self.annotator.publish('annotationUpdated', annotator);
             el.find('button').remove();
-
-            boxEl.find('div.annotator-hl').draggable({ disabled: true });
-            boxEl.find('div.annotator-hl').resizable({ disabled: true });
-
-            setTimeout(function () {
-                if (boxEl.find('.save').length === 0) {
-                    boxEl.boxer({ disabled: false });
-                }
-                boxEl.find('div.annotator-hl').draggable({ disabled: false });
-                boxEl.find('div.annotator-hl').resizable({ disabled: false });
-            }, 2100);
+            enableAnnotation();
+            boxEl.find('div.annotator-hl').draggable({ disabled: false });
+            boxEl.find('div.annotator-hl').resizable({ disabled: false });
         });
 
         var data = boxEl.boxer({
@@ -189,7 +160,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
         $('.annotator-controls').on('click', 'a.annotator-cancel', function () {
             $('.annotator-raw').remove();
-            boxEl.boxer({ disabled: false });
+            enableAnnotation()
         });
 
         el.on('mouseover', 'div', function () {
@@ -207,7 +178,6 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
                 annotator.showViewer([annotation], pos);
             }
         })
-
     };
 
     PdfAnnotator.prototype.getShapeDataFormat = function (offset) {
@@ -228,23 +198,15 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
         geo = this.getShape(geo);
 
-        var div = $('<div></div>')
+        $('<div></div>')
             .appendTo(this.annotator.element.find('.annotator-wrapper'))
             .data('annotator', annotation)
             .addClass('annotator-hl')
             .addClass('annotator-' + annotation.id)
             .addClass('annotator-pdf-hl')
             .css({ position: 'absolute', left: geo.x, top: geo.y, height: geo.height, width: geo.width });
+        updateProperties(annotation);
     };
-
-    PdfAnnotator.prototype.options = {
-        PdfAnnotator: {}
-    };
-
-    function PdfAnnotator(element, options) {
-        this.onAnnotationEditorSubmit = __bind(this.onAnnotationEditorSubmit, this);
-        PdfAnnotator.__super__.constructor.apply(this, arguments);
-    }
 
     PdfAnnotator.prototype.getShape = function (geometry) {
         var canvas = this.annotator.element.find('canvas');
@@ -271,8 +233,9 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             var hl = editor.annotation.box;
             var box = editor.annotation.box;
             delete editor.annotation.box;
+            editor.annotation.id = Date.now();
             hl.data('annotator', editor.annotation);
-            hl.removeClass('annotator-raw').addClass('annotator-hl').addClass('annotator-pdf-hl');
+            hl.removeClass('annotator-raw').addClass('annotator-' + editor.annotation.id).addClass('annotator-hl').addClass('annotator-pdf-hl');
             var geometry = editor.annotation.shapes[0].geometry;
             geometry.x = parseInt(box.css('left'));
             geometry.y = parseInt(box.css('top'));
