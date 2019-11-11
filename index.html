@@ -114,8 +114,8 @@ See https://github.com/adobe-type-tools/cmap-resources
       top: 3px;
     }
 
-    .mode_pdf .textLayer>span,
-    .mode_pdf .canvasWrapper {
+    .mode_shape .textLayer>span,
+    .mode_shape .canvasWrapper {
       cursor: pointer;
     }
 
@@ -127,6 +127,10 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     .textLayer .highlight {
       background-color: rgba(180, 0, 170, 0.32);
+    }
+
+    .ui-boxer-round {
+      border-radius: 50%;
     }
   </style>
 
@@ -194,16 +198,18 @@ See https://github.com/adobe-type-tools/cmap-resources
         if ($(this).data('mode') === 'text') {
           MODE = 'text';
           $(this).addClass('active');
-          $('.mode-pdf').removeClass('active');
+          $('.mode-shape').removeClass('active');
           $('.page').find('.annotator-wrapper').boxer('destroy');
-          $('body').removeClass('mode_pdf').addClass('mode_text');
+          $('body').removeClass('mode_shape').addClass('mode_text');
         } else {
-          MODE = 'pdf';
-          $(this).addClass('active');
+          MODE = 'shape';
+          $('.mode-shape').removeClass('active');
           $('.mode-text').removeClass('active');
-          $('.page').find('.annotator-wrapper').boxer({ disabled: false });
-          $('body').removeClass('mode_text').addClass('mode_pdf');
+          $(this).addClass('active');
+          $('.page').find('.annotator-wrapper').boxer({ disabled: false, shape: $(this).data('mode') });
+          $('body').removeClass('mode_text').addClass('mode_shape');
         }
+        $('body').data('shape', $(this).data('mode'));
       });
     });
 
@@ -439,10 +445,12 @@ See https://github.com/adobe-type-tools/cmap-resources
                 <i class="fa fa-text-width" aria-hidden="true"></i>
               </button>
               <div class="splitToolbarButtonSeparator"></div>
-              <button title="draw shape" data-mode="pdf" class="toolbarButton toggleMode mode-pdf">
+              <button title="Draw rectangle" data-mode="rectangle" class="toolbarButton toggleMode mode-shape">
                 <i class="fa fa-square-o" aria-hidden="true"></i>
               </button>
-
+              <button title="Draw circle" data-mode="circle" class="toolbarButton toggleMode mode-shape">
+                <i class="fa fa-circle-o" aria-hidden="true"></i>
+              </button>
               <div class="splitToolbarButton">
                 <button id="zoomOut" class="toolbarButton zoomOut" title="Zoom Out" tabindex="21"
                   data-l10n-id="zoom_out">

@@ -1,3 +1,15 @@
+var cntrlIsPressed = false;
+
+$(document).keydown(function (event) {
+    if (event.which == "17") {
+        cntrlIsPressed = true;
+    }
+});
+
+$(document).keyup(function () {
+    cntrlIsPressed = false;
+});
+
 $.widget("ui.boxer", $.ui.mouse, {
 
     start: function () {
@@ -78,8 +90,6 @@ $.widget("ui.boxer", $.ui.mouse, {
         if (this.options.disabled)
             return;
 
-        var options = this.options;
-
         var x1 = this.opos[0], y1 = this.opos[1], x2 = event.pageX, y2 = event.pageY;
 
         if (x1 > x2) {
@@ -93,7 +103,19 @@ $.widget("ui.boxer", $.ui.mouse, {
             y1 = tmp;
         }
 
-        this.helper.css({ left: x1, top: y1, width: x2 - x1, height: y2 - y1 });
+
+        var width = x2 - x1;
+        var height = y2 - y1
+
+        if (cntrlIsPressed) {
+            width = height;
+        }
+
+        if (this.options.shape === 'circle') {
+            this.helper.addClass('ui-boxer-round');
+        }
+
+        this.helper.css({ left: x1, top: y1, width, height });
 
         $('.boxer-hl').remove();
 

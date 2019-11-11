@@ -144,7 +144,6 @@ Annotator.Plugin.PdfOptions = (function (_super) {
 
 
         this.annotator.editor.addField({
-            label: 'Width',
             type: 'input',
             load: function (el, annotation) {
                 if (annotation.shapes) {
@@ -265,7 +264,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
 
     // border width
     PdfOptions.prototype.saveBorderWidth = function (el, annotation) {
-        annotation['borderWidth'] = $(el).find('input').val() || 0;
+        annotation['borderWidth'] = $(el).find('input').val() || '0';
     };
 
     PdfOptions.prototype.updateBorderWidth = function (el, annotation) {

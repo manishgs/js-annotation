@@ -50,8 +50,8 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         };
 
         var enableAnnotation = function () {
-            if ($('body').hasClass('mode_pdf')) {
-                boxEl.boxer({ disabled: false });
+            if ($('body').hasClass('mode_shape')) {
+                boxEl.boxer({ disabled: false, shape: $('body').data('shape') });
             } else {
                 boxEl.boxer('destroy');
             }
@@ -144,6 +144,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         });
 
         var data = boxEl.boxer({
+            shape: $('body').data('shape'),
             stop: function (event, ui) {
                 var offset = [];
                 offset.top = parseInt(ui.box.css('top'));
@@ -195,16 +196,22 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
     PdfAnnotator.prototype.annotationLoader = function (annotation) {
         var geo = annotation.shapes[0].geometry;
+        var type = annotation.shapes[0].type;
 
         geo = this.getShape(geo);
 
-        $('<div></div>')
+        var div = $('<div></div>')
             .appendTo(this.annotator.element.find('.annotator-wrapper'))
             .data('annotator', annotation)
             .addClass('annotator-hl')
             .addClass('annotator-' + annotation.id)
             .addClass('annotator-pdf-hl')
             .css({ position: 'absolute', left: geo.x, top: geo.y, height: geo.height, width: geo.width });
+
+        if (type == 'circle') {
+            div.addClass('ui-boxer-round');
+        }
+
         updateProperties(annotation);
     };
 
@@ -242,6 +249,9 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             geometry.height = parseInt(box.css('height'));
             geometry.width = parseInt(box.css('width'));
             editor.annotation.shapes[0].geometry = this.getGeoInPercentage(geometry);
+            if (hl.hasClass('ui-boxer-round')) {
+                editor.annotation.shapes[0].type = 'circle';
+            }
             this.annotator.publish('annotationCreated', editor.annotation);
         }
     };
