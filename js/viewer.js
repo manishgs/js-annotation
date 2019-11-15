@@ -12942,6 +12942,7 @@
                 eventName = _this2$buttons$button.eventName,
                 close = _this2$buttons$button.close,
                 eventDetails = _this2$buttons$button.eventDetails;
+              if (!element) return;
               element.addEventListener('click', function (evt) {
                 if (eventName !== null) {
                   var details = {
@@ -13385,11 +13386,11 @@
                 source: self
               });
             });
-            items.openFile.addEventListener('click', function () {
-              eventBus.dispatch('openfile', {
-                source: self
-              });
-            });
+            /*     items.openFile.addEventListener('click', function () {
+                  eventBus.dispatch('openfile', {
+                    source: self
+                  });
+                }); */
             items.print.addEventListener('click', function () {
               eventBus.dispatch('print', {
                 source: self

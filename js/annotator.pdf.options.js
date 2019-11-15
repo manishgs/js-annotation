@@ -8,45 +8,47 @@ var updateProperties = function (annotation) {
         type = 'pdf';
     }
 
+    var properties = annotation['properties'];
+
     if (type === 'pdf') {
-        if (annotation['borderColor'] || annotation['borderWidth']) {
+        if (properties['borderColor'] || properties['borderWidth']) {
             el.css({ 'border-style': 'solid' })
         }
 
-        if (annotation['borderColor']) {
-            el.css({ 'border-color': annotation['borderColor'] })
+        if (properties['borderColor']) {
+            el.css({ 'border-color': properties['borderColor'] })
         } else {
             el.css({ 'border-color': 'transparent' })
         }
 
-        if (annotation['fillColor']) {
-            el.css({ 'background-color': annotation['fillColor'] })
+        if (properties['fillColor']) {
+            el.css({ 'background-color': properties['fillColor'] })
         } else {
             el.css({ 'background-color': 'transparent' })
         }
 
-        if (annotation['borderWidth']) {
-            el.css({ 'border-width': annotation['borderWidth'] + 'px' })
+        if (properties['borderWidth']) {
+            el.css({ 'border-width': properties['borderWidth'] + 'px' })
         }
     }
 
     if (type === 'text') {
-        if (annotation['underline']) {
+        if (properties['underline']) {
             el.css({ 'border-bottom': '1px solid black' });
         } else {
             el.css({ 'border-bottom': 'none' });
         }
 
-        if (annotation['strikeThrough']) {
+        if (properties['strikeThrough']) {
             el.addClass('strikeThrough');
         } else {
             el.removeClass('strikeThrough');
         }
 
-        if (annotation['redaction']) {
+        if (properties['redaction']) {
             el.css({ 'background-color': 'black' })
-        } else if (annotation['highlightColor']) {
-            el.css({ 'background-color': annotation['highlightColor'] })
+        } else if (properties['highlightColor']) {
+            el.css({ 'background-color': properties['highlightColor'] })
         } else {
             el.css({ 'background-color': 'transparent' })
         }
@@ -74,8 +76,39 @@ Annotator.Plugin.PdfOptions = (function (_super) {
             });
         });
 
+        this.annotator.viewer.addField({
+            load: function (field, annotation) {
+                if (annotation.comments && annotation.comments.length) {
+                    annotation.comments = annotation.comments.filter(c => c.text);
+                    if (annotation.comments.length) {
+                        var html = '<ul style="padding:0px">';
+                        annotation.comments.forEach(function (comment) {
+                            if (comment.text) {
+                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by + ' / ' + new Date(comment.added_at) + '</li>';
+                            }
+                        });
+                        html += '</ul>';
+                        $(field).css('padding', '0px').html(html);
+                        $(field).parent().find('div:first').hide();
+                    }
+                } else {
+                    $(field).remove();
+                }
+            }
+        });
+
         this.annotator.editor.addField({
             load: function (el, annotation) {
+                if (!annotation.properties) {
+                    annotation.properties = {};
+                }
+
+                if (!annotation.comments) {
+                    annotation.comments = [{ added_by: USER_ID, added_at: Date.now() }];
+                } else {
+                    annotation.comments.push({ added_by: USER_ID, added_at: Date.now() });
+                }
+
                 if (annotation.shapes) {
                     $(el).show();
                     $(el).addClass('annotation-border-label');
@@ -83,6 +116,15 @@ Annotator.Plugin.PdfOptions = (function (_super) {
                 } else {
                     $(el).hide();
                 }
+            },
+            submit: function (el, annotation) {
+                if (annotation.text) {
+                    annotation.comments[annotation.comments.length - 1].text = annotation.text;
+                } else {
+                    annotation.comments = annotation.comments.filter(c => c.text);
+                }
+
+                delete annotation.text;
             }
         });
 
@@ -99,7 +141,9 @@ Annotator.Plugin.PdfOptions = (function (_super) {
                 }
             },
             submit: function (el, annotation) {
-                self.saveBorderColor(el, annotation)
+                if (annotation.shapes) {
+                    self.saveBorderColor(el, annotation)
+                }
             }
         });
 
@@ -222,7 +266,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
 
     // Border Color
     PdfOptions.prototype.updateBorderColor = function (el, annotation) {
-        var borderColor = annotation.borderColor
+        var borderColor = annotation.properties.borderColor
         if (typeof borderColor === 'undefined') {
             borderColor = "#f00";
         }
@@ -238,13 +282,13 @@ Annotator.Plugin.PdfOptions = (function (_super) {
     };
 
     PdfOptions.prototype.saveBorderColor = function (el, annotation) {
-        annotation['borderColor'] = $(el).find('input').val();
+        annotation.properties.borderColor = $(el).find('input').val();
     };
 
     // Fill color
     PdfOptions.prototype.updateFillColor = function (el, annotation) {
-        var fillColor = annotation.fillColor
-        if (typeof annotation.fillColor === 'undefined') {
+        var fillColor = annotation.properties.fillColor
+        if (typeof annotation.properties.fillColor === 'undefined') {
             fillColor = "rgba(255, 255, 10, 0.3)";
         }
         $(el).find('input').addClass('fillColor').val(fillColor);
@@ -259,17 +303,17 @@ Annotator.Plugin.PdfOptions = (function (_super) {
     };
 
     PdfOptions.prototype.saveFillColor = function (el, annotation) {
-        annotation['fillColor'] = $(el).find('input').val();
+        annotation.properties.fillColor = $(el).find('input').val();
     };
 
     // border width
     PdfOptions.prototype.saveBorderWidth = function (el, annotation) {
-        annotation['borderWidth'] = $(el).find('input').val() || '0';
+        annotation.properties.borderWidth = $(el).find('input').val() || '0';
     };
 
     PdfOptions.prototype.updateBorderWidth = function (el, annotation) {
-        var borderWidth = annotation.borderWidth
-        if (typeof annotation.borderWidth === 'undefined') {
+        var borderWidth = annotation.properties.borderWidth
+        if (typeof annotation.properties.borderWidth === 'undefined') {
             borderWidth = "1";
         }
 
@@ -281,33 +325,33 @@ Annotator.Plugin.PdfOptions = (function (_super) {
 
 
     PdfOptions.prototype.updateUnderline = function (el, annotation) {
-        $(el).find('input').prop('checked', annotation.underline || false);
+        $(el).find('input').prop('checked', annotation.properties.underline || false);
     };
 
     PdfOptions.prototype.saveUnderline = function (el, annotation) {
-        annotation['underline'] = $(el).find('input').prop('checked');
+        annotation.properties.underline = $(el).find('input').prop('checked');
     };
 
     PdfOptions.prototype.updateStrikeThrough = function (el, annotation) {
-        $(el).find('input').prop('checked', annotation.strikeThrough || false);
+        $(el).find('input').prop('checked', annotation.properties.strikeThrough || false);
     };
 
     PdfOptions.prototype.saveStrikeThrough = function (el, annotation) {
-        annotation['strikeThrough'] = $(el).find('input').prop('checked');
+        annotation.properties.strikeThrough = $(el).find('input').prop('checked');
     };
 
     PdfOptions.prototype.updateRedaction = function (el, annotation) {
-        $(el).find('input').prop('checked', annotation.redaction || false);
+        $(el).find('input').prop('checked', annotation.properties.redaction || false);
     };
 
     PdfOptions.prototype.saveRedaction = function (el, annotation) {
-        annotation['redaction'] = $(el).find('input').prop('checked');
+        annotation.properties.redaction = $(el).find('input').prop('checked');
     };
 
 
     PdfOptions.prototype.updateHighlightColor = function (el, annotation) {
-        var highlightColor = annotation.highlightColor
-        if (typeof annotation.highlightColor === 'undefined') {
+        var highlightColor = annotation.properties.highlightColor
+        if (typeof annotation.properties.highlightColor === 'undefined') {
             highlightColor = "rgba(255, 255, 10, 0.3)";
         }
         $(el).find('input').addClass('highlightColor').val(highlightColor);
@@ -322,7 +366,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
     };
 
     PdfOptions.prototype.saveHighlightColor = function (el, annotation) {
-        annotation['highlightColor'] = $(el).find('input').val();
+        annotation.properties.highlightColor = $(el).find('input').val();
     };
 
     return PdfOptions;

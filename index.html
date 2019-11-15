@@ -132,6 +132,103 @@ See https://github.com/adobe-type-tools/cmap-resources
     .ui-boxer-round {
       border-radius: 50%;
     }
+
+    #annotationFindInput {
+      width: 175px;
+    }
+
+    #annotationFindInput::-webkit-input-placeholder {
+      color: hsl(0, 0%, 75%);
+    }
+
+    #annotationFindInput::-moz-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput:-ms-input-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput::-ms-input-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput::placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput[data-status="pending"] {
+      background-image: url(../images/loading-small.png);
+      background-repeat: no-repeat;
+      background-position: right;
+    }
+
+    html[dir='rtl'] #annotationFindInput[data-status="pending"] {
+      background-position: left;
+    }
+
+    .annotationsearchList ul {
+      list-style: none;
+      float: none !important;
+      overflow-y: auto;
+      max-height: 275px;
+      margin-right: -6px;
+    }
+
+    .annotationsearchList li {
+      cursor: pointer;
+      padding: 10px;
+      float: none !important;
+      border-bottom: 1px solid #313030;
+      display: flex;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* number of lines to show */
+      line-height: 18px;
+      /* fallback */
+      max-height: 30px;
+      /* fallback */
+    }
+
+    .annotationsearchList li span {
+      padding: 10px;
+      margin: -10px 6px -10px -20px;
+      font-size: 12px;
+      border-right: 1px solid #313030;
+      float: none !important;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .annotator-adder,
+    .annotator-outer,
+    .annotator-notice {
+      z-index: 999 !important;
+    }
+
+    .annotationsearchList {
+      position: absolute !important;
+      left: 0px !important;
+      display: none;
+    }
+
+    .annotator-resize-action {
+      float: left;
+    }
+
+    .no-result {
+      line-height: 32px;
+    }
+
+    .annotator-listing ul li {
+      padding: 5px;
+      border-top: 1px solid #ccc;
+    }
+
+    .annotator-listing ul li:first-child {
+      border: none;
+    }
   </style>
 
   <!-- This snippet is used in production (included from viewer.html) -->
@@ -156,14 +253,17 @@ See https://github.com/adobe-type-tools/cmap-resources
   <script src="https://bgrins.github.io/spectrum/spectrum.js"></script>
 
   <script>
+    var USER_ID = 1;
+    var MODE = 'text';
+    // offsetRelative (or, if you prefer, positionRelative)
     $(document).on('ready', function () {
-      var MODE = 'text';
+      var highlightAnnotation = null;
       $('body').addClass('mode_' + MODE);
       $('.mode-' + MODE).addClass('active');
 
       document.addEventListener('textlayerrendered', function (event) {
         const num = event.detail.pageNumber;
-        const content = $('#viewer').find('.page:nth-child(' + num + ')')
+        const content = $('#viewer').find('.page:nth-child(' + num + ')');
         if (content.data('annotator')) {
           content.removeData('annotator');
         }
@@ -186,12 +286,31 @@ See https://github.com/adobe-type-tools/cmap-resources
         });
 
         content.data('annotator').subscribe("annotationsLoaded", function (annotation) {
+          if (annotation.length && highlightAnnotation && highlightAnnotation.page === num) {
+            annotation.forEach(function (annotation) {
+              if (highlightAnnotation.id === annotation.id) {
+                var el = annotation.highlights ? $(annotation.highlights) : $('.annotator-' + annotation.id);
+                var position = el.offset();
+                var top = position.top + $('#viewerContainer').scrollTop();
+                var left = position.left - content.offset().left;
+                $('#viewerContainer').animate({
+                  scrollTop: top - 200
+                }, 0);
+                position.top = position.top - content.offset().top;
+                position.left = left + (el.width() / 2);
+                setTimeout(() => {
+                  content.data('annotator').showViewer([annotation], position);
+                }, 100);
+              }
+            });
+
+            highlightAnnotation = null;
+          }
           if (MODE == 'text') {
             content.find('.annotator-wrapper').boxer('destroy');
           }
         });
       }, true);
-
 
       $('.toggleMode').on('click', function (e) {
         e.preventDefault();
@@ -211,14 +330,133 @@ See https://github.com/adobe-type-tools/cmap-resources
         }
         $('body').data('shape', $(this).data('mode'));
       });
-    });
 
+      $('.deleteAnnotations').on('click', function () {
+        if (confirm('Do you want to remove all annotations?')) {
+          $.ajax({
+            method: "DELETE",
+            url: "./store.php?annotations=all",
+          }).done(function () {
+            $('.annotator-pdf-hl').remove();
+            $('.annotator-hl').each(function () {
+              $(this).replaceWith($(this).text());
+            })
+          });
+        }
+      })
+
+      $('#annotationFindInput').on('click', function () {
+        if ($('.annotationsearchList').find('li').length) {
+          $('.annotationsearchList').show();
+        } else {
+          $('.annotationsearchList').hide();
+        }
+      });
+
+      function debounce(func, wait, immediate) {
+        var timeout;
+        return function () {
+          var context = this, args = arguments;
+          var later = function () {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+          };
+          var callNow = immediate && !timeout;
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+          if (callNow) func.apply(context, args);
+        };
+      }
+
+      $('#annotationFindInput').on('input', debounce(onAnnotationSearch, 500));
+
+      function onAnnotationSearch() {
+        var $this = $('#annotationFindInput')
+        var q = $this.val().trim();
+        if (q) {
+          $this.attr('data-status', 'pending');
+          $.ajax({
+            method: "GET",
+            url: "./store.php?search=" + q
+          }).done(function (data) {
+            var str = '<ul>';
+            var foundIds = [];
+            $.each(data.rows, function (k, v) {
+              for (var comment of v.comments) {
+                if (!foundIds.includes(v.id) && comment.text.toLowerCase().includes(q.toLowerCase())) {
+                  foundIds.push(v.id);
+                  str += '<li class="annotation-item" data-page="' + v.page + '" data-id="' + v.id + '" data-annotation="' + v.id + '" ><span>' + v.page + '</span>' + comment.text + '</li>'
+                }
+              }
+            });
+            str += '</ul>';
+
+            if (data.total < 1) {
+              str = "<div class='no-result'>Annotatiosn not found</div>";
+            }
+
+            $('.annotationsearchList').show().html(str);
+          }).fail(function () {
+            alert("error");
+          }).always(function () {
+            $this.attr('data-status', '');
+          });
+
+        } else {
+          $this.attr('data-status', '');
+          $('.annotationsearchList').hide();
+        }
+      }
+
+      $(document).mouseup(function (e) {
+        var container = $('.annotationsearchList');
+
+        // if the target of the click isn't the container nor a descendant of the container
+        if (!container.is(e.target) && container.has(e.target).length === 0) {
+          container.hide();
+        }
+      });
+
+      $(document).on('click', '.annotation-item', function () {
+        $('.annotator-viewer').addClass('annotator-hide');
+        $('.annotationsearchList').hide();
+        var id = $(this).data('id');
+        var page = $(this).data('page');
+        const content = $('#viewer').find('.page:nth-child(' + page + ')');
+        var found = false;
+        if (content.find('.canvasWrapper').length) {
+          content.find('.annotator-hl').each(function (i, a) {
+            var a = $(this);
+            var annotation = a.data('annotation');
+            if (!found && annotation.id == id) {
+              found = true;
+              var el = annotation.highlights ? $(annotation.highlights) : $('.annotator-' + annotation.id);
+              var position = el.offset();
+              var top = position.top + $('#viewerContainer').scrollTop();
+              var left = position.left - content.offset().left;
+              $('#viewerContainer').animate({
+                scrollTop: top - 200
+              }, '500');
+              position.top = position.top - content.offset().top;
+              position.left = left + (el.width() / 2);
+              setTimeout(() => {
+                content.data('annotator').showViewer([annotation], position);
+              }, 100);
+            }
+          });
+        }
+
+        if (!found) {
+          highlightAnnotation = { id, page };
+          PDFViewerApplication.pdfViewer.currentPageNumber = page;
+        }
+      });
+    });
   </script>
 </head>
 
 <body tabindex="1" class="loadingInProgress">
   <div id="outerContainer">
-
     <div id="sidebarContainer">
       <div id="toolbarSidebar">
         <div class="splitToolbarButton toggled">
@@ -288,11 +526,6 @@ See https://github.com/adobe-type-tools/cmap-resources
           <button id="secondaryPresentationMode" class="secondaryToolbarButton presentationMode visibleLargeView"
             title="Switch to Presentation Mode" tabindex="51" data-l10n-id="presentation_mode">
             <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
-          </button>
-
-          <button id="secondaryOpenFile" class="secondaryToolbarButton openFile visibleLargeView" title="Open File"
-            tabindex="52" data-l10n-id="open_file">
-            <span data-l10n-id="open_file_label">Open</span>
           </button>
 
           <button id="secondaryPrint" class="secondaryToolbarButton print visibleMediumView" title="Print" tabindex="53"
@@ -414,11 +647,6 @@ See https://github.com/adobe-type-tools/cmap-resources
                 <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
               </button>
 
-              <button id="openFile" class="toolbarButton openFile hiddenLargeView" title="Open File" tabindex="32"
-                data-l10n-id="open_file">
-                <span data-l10n-id="open_file_label">Open</span>
-              </button>
-
               <button id="print" class="toolbarButton print hiddenMediumView" title="Print" tabindex="33"
                 data-l10n-id="print">
                 <span data-l10n-id="print_label">Print</span>
@@ -441,6 +669,13 @@ See https://github.com/adobe-type-tools/cmap-resources
               </button>
             </div>
             <div id="toolbarViewerMiddle">
+              <input id="annotationFindInput" style="width: 150px;" class="toolbarField" title="Find"
+                placeholder="Search Annotations" />
+              <div class="findbar annotationsearchList doorHanger" id="findbar">
+              </div>
+              <button title="Delete all annotation" data-mode="text" class="toolbarButton deleteAnnotations">
+                <i class="fa fa-trash" aria-hidden="true"></i>
+              </button>
               <button title="Text annotation" data-mode="text" class="toolbarButton toggleMode mode-text">
                 <i class="fa fa-text-width" aria-hidden="true"></i>
               </button>

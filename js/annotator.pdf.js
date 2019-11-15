@@ -117,7 +117,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
         $(boxEl).on('click', '.annotator-resize-action button.cancel', function () {
             var el = $(this).parent().parent();
-            var annotator = el.data('annotator');
+            var annotator = el.data('annotation');
             var shape = annotator.shapes[0].geometry;
             shape = self.getShape(shape);
             el.css({ top: shape.y, left: shape.x, height: shape.height, width: shape.width });
@@ -129,7 +129,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
 
         $(boxEl).on('click', '.annotator-resize-action button.save', function (e) {
             var el = $(this).parent().parent();
-            var annotator = el.data('annotator');
+            var annotator = el.data('annotation');
             var geometry = [];
             geometry.y = parseInt(el.css('top'));
             geometry.x = parseInt(el.css('left'));
@@ -201,11 +201,12 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         geo = this.getShape(geo);
 
         var div = $('<div></div>')
-            .appendTo(this.annotator.element.find('.annotator-wrapper'))
-            .data('annotator', annotation)
-            .addClass('annotator-hl')
+            .data('annotation', annotation)
+            .attr('data-annotation-id', annotation.id)
             .addClass('annotator-' + annotation.id)
+            .addClass('annotator-hl')
             .addClass('annotator-pdf-hl')
+            .appendTo(this.annotator.element.find('.annotator-wrapper'))
             .css({ position: 'absolute', left: geo.x, top: geo.y, height: geo.height, width: geo.width });
 
         if (type == 'circle') {
@@ -241,8 +242,12 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             var box = editor.annotation.box;
             delete editor.annotation.box;
             editor.annotation.id = Date.now();
-            hl.data('annotator', editor.annotation);
-            hl.removeClass('annotator-raw').addClass('annotator-' + editor.annotation.id).addClass('annotator-hl').addClass('annotator-pdf-hl');
+            hl.data('annotation', editor.annotation)
+                .removeClass('annotator-raw')
+                .attr('data-annotation-id', editor.annotation.id)
+                .addClass('annotator-' + editor.annotation.id)
+                .addClass('annotator-hl')
+                .addClass('annotator-pdf-hl');
             var geometry = editor.annotation.shapes[0].geometry;
             geometry.x = parseInt(box.css('left'));
             geometry.y = parseInt(box.css('top'));
