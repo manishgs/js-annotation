@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comments = [];
         foreach ($annotation['comments'] as $comment) {
             if ($comment && isset($comment['text'])) {
+                $comment->added_by = $comment->added_by->aid;
                 $comments[] = $comment;
             }
         }
@@ -53,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $comments = [];
             foreach ($annotation['comments'] as $comment) {
                 if ($comment && isset($comment['text'])) {
+                    $comment->added_by = $comment->added_by->aid;
                     $comments[] = $comment;
                 }
             }
@@ -76,8 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $found = false;
         foreach ($a->comments as &$comment) {
-            $comment->added_by = 'Admin';
-
+            $comment->added_by = ['id' => $comment->added_by, 'name' => 'Admin'];
             if (strstr(strtolower($comment->text), strtolower($q))) {
                 $found = true;
             }

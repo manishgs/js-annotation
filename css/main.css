@@ -1,0 +1,196 @@
+ .textLayer ::-moz-selection {
+      background: rgba(255, 255, 10, 0.3);
+    }
+
+    .textLayer ::selection,
+    .annotator-hl-temporary {
+      background: rgba(255, 255, 10, 0.3) !important;
+    }
+
+    .ui-resizable-helper,
+    .boxer-hl,
+    .annotator-raw {
+      border: 1px solid #e43535;
+      background: rgba(255, 255, 10, 0.3);
+    }
+
+    .annotator-pdf-hl {
+      cursor: move;
+    }
+
+    .textLayer {
+      opacity: inherit;
+    }
+
+    .toolbarButton.active {
+      background: #c5bd47;
+    }
+
+    .annotator-widget .annotator-item:first-child {
+      float: none;
+      padding: 0px !important;
+    }
+
+    .annotator-widget .annotator-item:nth-child(2) {
+      float: none;
+    }
+
+    .annotator-editor .annotator-item {
+      float: left;
+      padding: 10px 5px !important;
+      border-top: 0px !important;
+    }
+
+    .annotator-editor .annotator-item .borderWidth {
+      display: inline-block;
+      width: 25px;
+      text-align: center;
+      padding: 4px;
+      min-width: auto;
+      border: 1px solid #ddd;
+    }
+
+    .annotator-listing {
+      overflow: hidden;
+    }
+
+    .sp-container {
+      z-index: 99999999 !important;
+    }
+
+    span.strikeThrough {
+      position: relative;
+    }
+
+    span.strikeThrough:before {
+      content: " ";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      border-top: 1px solid #000;
+      width: 100%;
+    }
+
+    .annotator-editor .annotator-item.annotation-text-highlight {
+      float: none;
+    }
+
+    .annotator-editor .annotator-checkbox input {
+      top: 3px;
+    }
+
+    .mode_shape .textLayer>span,
+    .mode_shape .canvasWrapper {
+      cursor: pointer;
+    }
+
+    .textLayer .highlight.selected {
+      padding: 0px;
+      border-radius: 0px;
+      background-color: rgba(0, 100, 0, 0.35);
+    }
+
+    .textLayer .highlight {
+      background-color: rgba(180, 0, 170, 0.32);
+    }
+
+    .ui-boxer-round {
+      border-radius: 50%;
+    }
+
+    #annotationFindInput {
+      width: 175px;
+    }
+
+    #annotationFindInput::-webkit-input-placeholder {
+      color: hsl(0, 0%, 75%);
+    }
+
+    #annotationFindInput::-moz-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput:-ms-input-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput::-ms-input-placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput::placeholder {
+      font-style: italic;
+    }
+
+    #annotationFindInput[data-status="pending"] {
+      background-image: url(../images/loading-small.png);
+      background-repeat: no-repeat;
+      background-position: right;
+    }
+
+    html[dir='rtl'] #annotationFindInput[data-status="pending"] {
+      background-position: left;
+    }
+
+    .annotationsearchList ul {
+      list-style: none;
+      float: none !important;
+      overflow-y: auto;
+      max-height: 275px;
+      margin-right: -6px;
+    }
+
+    .annotationsearchList li {
+      cursor: pointer;
+      padding: 10px;
+      float: none !important;
+      border-bottom: 1px solid #313030;
+      display: flex;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* number of lines to show */
+      line-height: 18px;
+      /* fallback */
+      max-height: 30px;
+      /* fallback */
+    }
+
+    .annotationsearchList li span {
+      padding: 10px;
+      margin: -10px 6px -10px -20px;
+      font-size: 12px;
+      border-right: 1px solid #313030;
+      float: none !important;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .annotator-adder,
+    .annotator-outer,
+    .annotator-notice {
+      z-index: 999 !important;
+    }
+
+    .annotationsearchList {
+      position: absolute !important;
+      left: 0px !important;
+      display: none;
+    }
+
+    .annotator-resize-action {
+      float: left;
+    }
+
+    .no-result {
+      line-height: 32px;
+    }
+
+    .annotator-listing ul li {
+      padding: 5px;
+      border-top: 1px solid #ccc;
+    }
+
+    .annotator-listing ul li:first-child {
+      border: none;
+    }

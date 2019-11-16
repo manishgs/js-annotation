@@ -9,6 +9,7 @@ var updateProperties = function (annotation) {
     }
 
     var properties = annotation['properties'];
+    if (!properties) return;
 
     if (type === 'pdf') {
         if (properties['borderColor'] || properties['borderWidth']) {
@@ -55,16 +56,14 @@ var updateProperties = function (annotation) {
     }
 };
 
-Annotator.Plugin.PdfOptions = (function (_super) {
-    __extends(PdfOptions, _super);
+Annotator.Plugin.Properties = (function (_super) {
+    __extends(Properties, _super);
 
-    function PdfOptions() {
-        PdfOptions.__super__.constructor.call(this, arguments);
+    function Properties() {
+        Properties.__super__.constructor.call(this, arguments);
     }
 
-    PdfOptions.prototype.options = {};
-
-    PdfOptions.prototype.pluginInit = function (options) {
+    Properties.prototype.pluginInit = function (options) {
         var self = this;
         this.annotator.subscribe("annotationCreated", updateProperties);
         this.annotator.subscribe("annotationUpdated", updateProperties);
@@ -84,7 +83,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
                         var html = '<ul style="padding:0px">';
                         annotation.comments.forEach(function (comment) {
                             if (comment.text) {
-                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by + ' / ' + comment.added_at + '</li>';
+                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by.name + ' / ' + comment.added_at + '</li>';
                             }
                         });
                         html += '</ul>';
@@ -113,7 +112,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
             },
             submit: function (el, annotation) {
                 if (annotation.text) {
-                    comment = { text: annotation.text, added_by: USER_ID, added_at: Date.now() };
+                    comment = { text: annotation.text, added_by: USER, added_at: Date.now() };
                     if (!annotation.comments) {
                         annotation.comments = [comment];
                     } else {
@@ -262,7 +261,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
     };
 
     // Border Color
-    PdfOptions.prototype.updateBorderColor = function (el, annotation) {
+    Properties.prototype.updateBorderColor = function (el, annotation) {
         var borderColor = annotation.properties.borderColor
         if (typeof borderColor === 'undefined') {
             borderColor = "#f00";
@@ -278,12 +277,12 @@ Annotator.Plugin.PdfOptions = (function (_super) {
         });
     };
 
-    PdfOptions.prototype.saveBorderColor = function (el, annotation) {
+    Properties.prototype.saveBorderColor = function (el, annotation) {
         annotation.properties.borderColor = $(el).find('input').val();
     };
 
     // Fill color
-    PdfOptions.prototype.updateFillColor = function (el, annotation) {
+    Properties.prototype.updateFillColor = function (el, annotation) {
         var fillColor = annotation.properties.fillColor
         if (typeof annotation.properties.fillColor === 'undefined') {
             fillColor = "rgba(255, 255, 10, 0.3)";
@@ -299,16 +298,16 @@ Annotator.Plugin.PdfOptions = (function (_super) {
         });
     };
 
-    PdfOptions.prototype.saveFillColor = function (el, annotation) {
+    Properties.prototype.saveFillColor = function (el, annotation) {
         annotation.properties.fillColor = $(el).find('input').val();
     };
 
     // border width
-    PdfOptions.prototype.saveBorderWidth = function (el, annotation) {
+    Properties.prototype.saveBorderWidth = function (el, annotation) {
         annotation.properties.borderWidth = $(el).find('input').val() || '0';
     };
 
-    PdfOptions.prototype.updateBorderWidth = function (el, annotation) {
+    Properties.prototype.updateBorderWidth = function (el, annotation) {
         var borderWidth = annotation.properties.borderWidth
         if (typeof annotation.properties.borderWidth === 'undefined') {
             borderWidth = "1";
@@ -321,32 +320,32 @@ Annotator.Plugin.PdfOptions = (function (_super) {
     };
 
 
-    PdfOptions.prototype.updateUnderline = function (el, annotation) {
+    Properties.prototype.updateUnderline = function (el, annotation) {
         $(el).find('input').prop('checked', annotation.properties.underline || false);
     };
 
-    PdfOptions.prototype.saveUnderline = function (el, annotation) {
+    Properties.prototype.saveUnderline = function (el, annotation) {
         annotation.properties.underline = $(el).find('input').prop('checked');
     };
 
-    PdfOptions.prototype.updateStrikeThrough = function (el, annotation) {
+    Properties.prototype.updateStrikeThrough = function (el, annotation) {
         $(el).find('input').prop('checked', annotation.properties.strikeThrough || false);
     };
 
-    PdfOptions.prototype.saveStrikeThrough = function (el, annotation) {
+    Properties.prototype.saveStrikeThrough = function (el, annotation) {
         annotation.properties.strikeThrough = $(el).find('input').prop('checked');
     };
 
-    PdfOptions.prototype.updateRedaction = function (el, annotation) {
+    Properties.prototype.updateRedaction = function (el, annotation) {
         $(el).find('input').prop('checked', annotation.properties.redaction || false);
     };
 
-    PdfOptions.prototype.saveRedaction = function (el, annotation) {
+    Properties.prototype.saveRedaction = function (el, annotation) {
         annotation.properties.redaction = $(el).find('input').prop('checked');
     };
 
 
-    PdfOptions.prototype.updateHighlightColor = function (el, annotation) {
+    Properties.prototype.updateHighlightColor = function (el, annotation) {
         var highlightColor = annotation.properties.highlightColor
         if (typeof annotation.properties.highlightColor === 'undefined') {
             highlightColor = "rgba(255, 255, 10, 0.3)";
@@ -362,9 +361,9 @@ Annotator.Plugin.PdfOptions = (function (_super) {
         });
     };
 
-    PdfOptions.prototype.saveHighlightColor = function (el, annotation) {
+    Properties.prototype.saveHighlightColor = function (el, annotation) {
         annotation.properties.highlightColor = $(el).find('input').val();
     };
 
-    return PdfOptions;
+    return Properties;
 })(Annotator.Plugin);

@@ -18,21 +18,21 @@ var __bind = function (fn, me) {
         return child;
     };
 
-Annotator.Plugin.PdfAnnotator = (function (_super) {
-    __extends(PdfAnnotator, _super);
-    PdfAnnotator.prototype.events = {
+Annotator.Plugin.Shape = (function (_super) {
+    __extends(Shape, _super);
+    Shape.prototype.events = {
         'annotationEditorSubmit': 'onAnnotationEditorSubmit'
     };
-    PdfAnnotator.prototype.options = {
-        PdfAnnotator: {}
+    Shape.prototype.options = {
+        Shape: {}
     };
 
-    function PdfAnnotator(element, options) {
+    function Shape(element, options) {
         this.onAnnotationEditorSubmit = __bind(this.onAnnotationEditorSubmit, this);
-        PdfAnnotator.__super__.constructor.apply(this, arguments);
+        Shape.__super__.constructor.apply(this, arguments);
     }
 
-    PdfAnnotator.prototype.pluginInit = function (options) {
+    Shape.prototype.pluginInit = function (options) {
         var annotator = this.annotator;
         var el = annotator.element;
         var boxEl = el.find('.annotator-wrapper');
@@ -181,11 +181,11 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         })
     };
 
-    PdfAnnotator.prototype.getShapeDataFormat = function (offset) {
+    Shape.prototype.getShapeDataFormat = function (offset) {
         return [{ type: "rect", geometry: { x: offset.left, y: offset.top, height: offset.height, width: offset.width } }];
     };
 
-    PdfAnnotator.prototype.resizeButtons = function () {
+    Shape.prototype.resizeButtons = function () {
         return '<div class="btn-group annotator-resize-action" role="group">' +
             '<button title="Save" class="save btn btn-primary"><span class="fa fa-floppy-o"' +
             ' aria-hidden="true"></span></button> ' +
@@ -194,7 +194,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         '</div>';
     };
 
-    PdfAnnotator.prototype.annotationLoader = function (annotation) {
+    Shape.prototype.annotationLoader = function (annotation) {
         var geo = annotation.shapes[0].geometry;
         var type = annotation.shapes[0].type;
 
@@ -216,7 +216,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         updateProperties(annotation);
     };
 
-    PdfAnnotator.prototype.getShape = function (geometry) {
+    Shape.prototype.getShape = function (geometry) {
         var canvas = this.annotator.element.find('canvas');
         var g = {};
         g.x = geometry.x * canvas.width();
@@ -226,7 +226,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         return g;
     };
 
-    PdfAnnotator.prototype.getGeoInPercentage = function (geometry) {
+    Shape.prototype.getGeoInPercentage = function (geometry) {
         var canvas = this.annotator.element.find('canvas');
         var g = {};
         g.x = geometry.x / canvas.width();
@@ -236,7 +236,7 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
         return g;
     };
 
-    PdfAnnotator.prototype.onAnnotationEditorSubmit = function (editor) {
+    Shape.prototype.onAnnotationEditorSubmit = function (editor) {
         if (editor.annotation.box !== undefined) {
             var hl = editor.annotation.box;
             var box = editor.annotation.box;
@@ -260,5 +260,5 @@ Annotator.Plugin.PdfAnnotator = (function (_super) {
             this.annotator.publish('annotationCreated', editor.annotation);
         }
     };
-    return PdfAnnotator;
+    return Shape;
 })(Annotator.Plugin);
