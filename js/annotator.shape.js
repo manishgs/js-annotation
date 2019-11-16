@@ -23,9 +23,7 @@ Annotator.Plugin.Shape = (function (_super) {
     Shape.prototype.events = {
         'annotationEditorSubmit': 'onAnnotationEditorSubmit'
     };
-    Shape.prototype.options = {
-        Shape: {}
-    };
+    Shape.prototype.options = {};
 
     function Shape(element, options) {
         this.onAnnotationEditorSubmit = __bind(this.onAnnotationEditorSubmit, this);

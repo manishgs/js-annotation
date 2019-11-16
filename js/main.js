@@ -14,8 +14,8 @@ $(document).on('ready', function () {
     document.addEventListener('textlayerrendered', function (event) {
         const num = event.detail.pageNumber;
         const content = $('#viewer').find('.page:nth-child(' + num + ')');
-        if (content.find('.annotator-wrapper').length) return;
         if (content.data('annotator')) {
+            content.data('annotator').destroy();
             content.removeData('annotator');
         }
         content.annotator();
