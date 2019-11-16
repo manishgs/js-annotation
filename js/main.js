@@ -6,6 +6,7 @@ $(document).on('ready', function () {
     document.addEventListener('textlayerrendered', function (event) {
         const num = event.detail.pageNumber;
         const content = $('#viewer').find('.page:nth-child(' + num + ')');
+        if (content.find('.annotator-wrapper').length) return;
         if (content.data('annotator')) {
             content.removeData('annotator');
         }
@@ -35,9 +36,6 @@ $(document).on('ready', function () {
                         var position = el.offset();
                         var top = position.top + $('#viewerContainer').scrollTop();
                         var left = position.left - content.offset().left;
-                        $('#viewerContainer').animate({
-                            scrollTop: top - 200
-                        }, 0);
                         position.top = position.top - content.offset().top;
                         position.left = left + (el.width() / 2);
                         setTimeout(() => {
@@ -170,16 +168,19 @@ $(document).on('ready', function () {
                 var annotation = a.data('annotation');
                 if (!found && annotation.id == id) {
                     found = true;
-                    var el = annotation.highlights ? $(annotation.highlights) : $('.annotator-' + annotation.id);
-                    var position = el.offset();
-                    var top = position.top + $('#viewerContainer').scrollTop();
-                    var left = position.left - content.offset().left;
-                    $('#viewerContainer').animate({
-                        scrollTop: top - 200
-                    }, '500');
-                    position.top = position.top - content.offset().top;
-                    position.left = left + (el.width() / 2);
+                    if (PDFViewerApplication.page !== page) {
+                        PDFViewerApplication.pdfViewer.currentPageNumber = page;
+                    }
                     setTimeout(() => {
+                        var el = annotation.highlights ? $(annotation.highlights) : $('.annotator-' + annotation.id);
+                        var position = el.offset();
+                        var top = position.top + $('#viewerContainer').scrollTop();
+                        var left = position.left - content.offset().left;
+                        $('#viewerContainer').animate({
+                            scrollTop: top - 200
+                        }, '500');
+                        position.top = position.top - content.offset().top;
+                        position.left = left + (el.width() / 2);
                         content.data('annotator').showViewer([annotation], position);
                     }, 100);
                 }
