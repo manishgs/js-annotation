@@ -84,7 +84,7 @@ Annotator.Plugin.PdfOptions = (function (_super) {
                         var html = '<ul style="padding:0px">';
                         annotation.comments.forEach(function (comment) {
                             if (comment.text) {
-                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by + ' / ' + new Date(comment.added_at) + '</li>';
+                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by + ' / ' + comment.added_at + '</li>';
                             }
                         });
                         html += '</ul>';
@@ -103,12 +103,6 @@ Annotator.Plugin.PdfOptions = (function (_super) {
                     annotation.properties = {};
                 }
 
-                if (!annotation.comments) {
-                    annotation.comments = [{ added_by: USER_ID, added_at: Date.now() }];
-                } else {
-                    annotation.comments.push({ added_by: USER_ID, added_at: Date.now() });
-                }
-
                 if (annotation.shapes) {
                     $(el).show();
                     $(el).addClass('annotation-border-label');
@@ -119,9 +113,12 @@ Annotator.Plugin.PdfOptions = (function (_super) {
             },
             submit: function (el, annotation) {
                 if (annotation.text) {
-                    annotation.comments[annotation.comments.length - 1].text = annotation.text;
-                } else {
-                    annotation.comments = annotation.comments.filter(c => c.text);
+                    comment = { text: annotation.text, added_by: USER_ID, added_at: Date.now() };
+                    if (!annotation.comments) {
+                        annotation.comments = [comment];
+                    } else {
+                        annotation.comments.push(comment);
+                    }
                 }
 
                 delete annotation.text;
