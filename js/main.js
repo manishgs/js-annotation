@@ -1,5 +1,3 @@
-
-
 $(document).on('ready', function () {
     document.addEventListener('load', function () {
         PDFViewerApplicationOptions.set('workerSrc', WORKER_URL);
