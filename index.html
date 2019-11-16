@@ -9,7 +9,7 @@
   <title>PDF Annotation</title>
 
   <link rel="stylesheet" href="css/viewer.css">
-  <link rel="stylesheet" href="https://labs.abeautifulsite.net/jquery-minicolors/jquery.minicolors.css">
+  <link rel="stylesheet" href="css/jquery.minicolors.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
   <link rel="stylesheet" href="css/main.css">
 
@@ -17,7 +17,7 @@
   <script src="js/pdf.js"></script>
 
   <link rel="stylesheet" href="css/jquery-ui.css" />
-  <link rel="stylesheet" href="https://bgrins.github.io/spectrum/spectrum.css" />
+  <link rel="stylesheet" href="css/spectrum.css" />
   <link rel="stylesheet" href="css/annotator.min.css" />
 
   <script src="js/jquery.min.js"></script>
@@ -30,10 +30,13 @@
   <script src="js/annotator.shape.js"></script>
   <script src="js/annotator.properties.js"></script>
   <script src="js/viewer.js"></script>
-  <script src="https://bgrins.github.io/spectrum/spectrum.js"></script>
+  <script src="js/spectrum.js"></script>
   <script>
     var USER = { id: 1, name: 'Admin' };
     var MODE = 'text';
+    var PDF_URL = 'test.pdf';
+    var WORKER_URL = 'js/pdf.worker.js';
+    var PAGE_TITLE = 'PDF annotations';
   </script>
   <script src="js/main.js"></script>
 </head>

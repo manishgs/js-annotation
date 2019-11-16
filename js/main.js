@@ -1,4 +1,14 @@
+
+
 $(document).on('ready', function () {
+    document.addEventListener('load', function () {
+        PDFViewerApplicationOptions.set('workerSrc', WORKER_URL);
+        PDFViewerApplicationOptions.set('defaultUrl', PDF_URL);
+    }, true);
+
+    document.addEventListener('documentloaded', function (params) {
+        PDFViewerApplication.setTitle(PAGE_TITLE);
+    });
     var highlightAnnotation = null;
     $('body').addClass('mode_' + MODE);
     $('.mode-' + MODE).addClass('active');
