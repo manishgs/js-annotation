@@ -1,8 +1,74 @@
+function saveStamp(el, data) {
+    if (el.data('stamp')) {
+        data.id = el.data('stamp').id;
+    }
+    data.userId = USER.id;
+    data.pdfId = PDF.id;
+    $.ajax({
+        method: "POST",
+        url: "./store.php?stamp=1",
+        data
+    }).done(function (data) {
+        console.log(el);
+        el.data('stamp', data);
+    });
+}
+
+function deleteStamp(stamp) {
+    $.ajax({
+        method: "DELETE",
+        url: "./store.php?stamp=1",
+        data: stamp
+    }).done(function (data) {
+        console.log('stamp deleted')
+    });
+}
+
+function loadStamp(page, callback) {
+    $.ajax({
+        method: "GET",
+        url: "./store.php?stamp=1&page=" + page,
+    }).done(function (data) {
+        callback(data);
+    });
+}
+
+function renderStamp(shape, draggable) {
+    var div = $('<div class="stamp"></div>');
+    div.css(shape);
+    div.html(draggable);
+    var trash = $('<i class="fa fa-trash" aria-hidden="true"></i>');
+    trash.on('click', function () {
+        var stamp = $(this).parent().data('stamp');
+        $(this).parent().remove();
+        if (stamp) {
+            deleteStamp(stamp);
+        }
+    });
+    div.prepend(trash);
+    return div;
+}
+
+function stampDraggable(el, shape) {
+    el.draggable({
+        containment: "parent",
+        cursor: "move",
+        scroll: true,
+        stop: function (e) {
+            var el = $(e.target);
+            shape.top = el.css('top').replace('px', '');
+            shape.left = el.css('left').replace('px', '');
+            saveStamp(el, shape);
+        },
+    });
+}
+
+
 $(document).on('ready', function () {
 
     Annotator.Viewer.prototype.onDeleteClick = function (event) {
         if (confirm('Do you want to delete this annotation along with comments?')) {
-            return this.onButtonClick(event,"delete")
+            return this.onButtonClick(event, "delete")
         }
     };
 
@@ -53,6 +119,21 @@ $(document).on('ready', function () {
             }
         });
 
+        loadStamp(num, function (data) {
+            if (data.rows && data.rows.length) {
+                data.rows.forEach(function (v, i) {
+                    var stamp = $('<img data-type="' + v.type + '" src="./images/stamp/' + v.type + '.jpg">')
+                    var div = renderStamp({
+                        top: v.top + 'px',
+                        left: v.left + 'px'
+                    }, stamp);
+                    div.data('stamp', v);
+                    content.prepend(div);
+                    stampDraggable(div, v);
+                });
+            }
+        })
+
         content.find('.annotator-wrapper').droppable({
             accept: '.stamp-item',
             activeClass: "drop-area",
@@ -61,49 +142,22 @@ $(document).on('ready', function () {
                 var draggable = ui.draggable.clone();
 
                 draggable.removeClass('stamp-item').removeClass('ui-draggable').removeClass('ui-draggable-handle');
-                var div = $('<div class="stamp"></div>');
-
                 var offset = $('.ui-draggable-dragging').offset();
                 var shape = {
                     top: offset.top - (content.offset().top + 10),
                     left: offset.left - (content.offset().left + 10)
                 }
-                div.css(shape);
-                div.html(draggable);
-                var trash = $('<i class="fa fa-trash" aria-hidden="true"></i>');
-                trash.on('click', function () {
-                    $(this).parent().remove();
-                });
-                div.prepend(trash);
+                var div = renderStamp(shape, draggable);
                 droppable.parent().prepend(div);
-
-
                 shape.type = draggable.data('type');
                 shape.page = num;
-                saveStamp(shape);
-
+                saveStamp(div, shape);
                 setTimeout(() => {
-                    $('.stamp').draggable({
-                        containment: "parent",
-                        cursor: "move",
-                        scroll: true,
-                        stop: function (e) {
-                            var el = $(e.target);
-                            shape.top = el.offset().top;
-                            shape.left = el.offset().left;
-                            saveStamp(shape);
-                        },
-                    });
+                    stampDraggable($('.stamp'), shape);
                 }, 100);
                 $('.stamp-collection').hide();
             }
         });
-
-        function saveStamp(d) {
-            d.user = USER.id;
-            d.pdfId = PDF.id;
-            console.log(d)
-        }
 
         content.data('annotator').subscribe("annotationsLoaded", function (annotation) {
             if (annotation.length && highlightAnnotation && highlightAnnotation.page === num) {

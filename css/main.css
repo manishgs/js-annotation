@@ -202,7 +202,7 @@
     }
 
     .stamp img {
-      width :160px
+      height:120px
     }
 
     .stamp:hover .fa-trash{
@@ -217,11 +217,11 @@
     }
 
     .stamp-item.ui-draggable-dragging{
-      width:160px;
+      height:120px;
     }
 
      .stamp-list li img {
-       width:70px;
+       height:42px;
      }
 
     .stamp-list li  {
