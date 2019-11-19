@@ -10,7 +10,6 @@ function saveStamp(el, data) {
         url: "./store.php?stamp=1",
         data
     }).done(function (data) {
-        console.log(el);
         el.data('stamp', data);
     });
 }
@@ -21,7 +20,6 @@ function deleteStamp(stamp) {
         url: "./store.php?stamp=1",
         data: stamp
     }).done(function (data) {
-        console.log('stamp deleted')
     });
 }
 

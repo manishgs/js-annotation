@@ -164,7 +164,6 @@ Annotator.Plugin.Shape = (function (_super) {
                 var pos = {};
                 pos.top = offset.top + offset.height / 2;
                 pos.left = offset.left + offset.width / 2;
-                console.log(offset, self.getShapeDataFormat(offset));
                 annotator.showEditor({ shapes: self.getShapeDataFormat(offset), box: ui.box }, pos);
             }
         });

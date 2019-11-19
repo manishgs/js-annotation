@@ -292,7 +292,6 @@ Annotator.Plugin.Properties = (function (_super) {
                 }
             },
             submit: function (el, annotation) {
-                console.log(annotation);
                 if (annotation.ranges) {
                     self.saveStrikeThrough(el, annotation);
                 }
