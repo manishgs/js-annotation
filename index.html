@@ -10,7 +10,6 @@
 
   <link rel="stylesheet" href="css/viewer.css">
   <link rel="stylesheet" href="css/jquery.minicolors.css">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
   <link rel="stylesheet" href="css/main.css">
 
   <link rel="resource" type="application/l10n" href="locale/locale.properties">
@@ -23,7 +22,7 @@
   <script src="js/jquery.min.js"></script>
   <script src="js/annotator.min.js"></script>
   <script src="js/annotator.store.min.js"></script>
-
+  <script src="js/moment.min.js"></script>
   <!-- pdf annotations -->
   <script src="js/jquery-ui.min.js"></script>
   <script src="js/jbox.js"></script>
@@ -260,28 +259,40 @@
               <div class="findbar annotationsearchList doorHanger" id="findbar">
               </div>
               <button title="Delete all annotation" class="toolbarButton deleteAnnotations">
-                <i class="fa fa-trash" aria-hidden="true"></i>
+                <img src="./images/trash.svg" style="height: 12px;" />
               </button>
               <button title="Text annotation" data-mode="text" class="toolbarButton toggleMode mode-text">
-                <i class="fa fa-text-width" aria-hidden="true"></i>
+                <img src="./images/text.svg" style="height: 12px;" />
               </button>
               <div class="splitToolbarButtonSeparator"></div>
               <button title="Draw rectangle" data-mode="rectangle" class="toolbarButton toggleMode mode-shape">
-                <img src="./images/rectangle.svg" style="width: 13px;" />
+                <img src="./images/rectangle.svg" style="height: 12px;" />
               </button>
               <button title="Draw circle" data-mode="circle" class="toolbarButton toggleMode mode-shape">
-                <img src="./images/circle.svg" style="width: 13px;" />
+                <img src="./images/circle.svg" style="height: 12px;" />
               </button>
               <div style="position:relative">
                 <button title="Insert stamp" class="toolbarButton botton-stamp">
-                  <img src="./images/stamp/icon.png" style="width: 20px;" />
+                  <img src="./images/icon.png" style="height: 15px;" />
                 </button>
                 <div class="findbar doorHanger stamp-collection" id="findbar"
-                  style="display:none; position: absolute; left:0px; min-width: 240px;">
+                  style="display:none; position: absolute; left:0px; min-width: 256px;">
                   <ul class="stamp-list">
-                    <li><img class="stamp-item" data-type="approved" src="./images/stamp/approved.jpg" /></li>
-                    <li><img class="stamp-item" data-type="rejected" src="./images/stamp/rejected.jpg" /></li>
-                    <li><img class="stamp-item" data-type="cancelled" src="./images/stamp/cancelled.jpg" /></li>
+                    <li>
+                      <div class="stamp-item stamp-block stamp-revised" data-type="revised">Revised</div>
+                    </li>
+                    <li>
+                      <div class="stamp-item stamp-block stamp-reviewed" data-type="reviewed">Reviewed</div>
+                    </li>
+                    <li>
+                      <div class="stamp-item stamp-block stamp-received" data-type="received">Received</div>
+                    </li>
+                    <li>
+                      <div class="stamp-item stamp-block stamp-approved" data-type="approved">Approved</div>
+                    </li>
+                    <li>
+                      <div class="stamp-item stamp-block stamp-confidential" data-type="confidential">Confidential</div>
+                    </li>
                   </ul>
                 </div>
               </div>

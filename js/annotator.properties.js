@@ -68,9 +68,9 @@ Annotator.Plugin.Properties = (function (_super) {
         this.annotator.subscribe("annotationCreated", updateProperties);
         this.annotator.subscribe("annotationUpdated", updateProperties);
         this.annotator.subscribe("annotationUpdated", updateProperties);
-        this.annotator.subscribe("annotationEditorHidden", function(editor){
-                delete editor.annotation.text;
-                delete editor.annotation.isComment;
+        this.annotator.subscribe("annotationEditorHidden", function (editor) {
+            delete editor.annotation.text;
+            delete editor.annotation.isComment;
         });
 
         this.annotator.subscribe("annotationsLoaded", function (annotations) {
@@ -84,7 +84,7 @@ Annotator.Plugin.Properties = (function (_super) {
         this.annotator.viewer.addField({
             load: function (field, annotation) {
                 var div = $('<button title="Add comment" class="annotator-edit annotator-add">Add comment</button>');
-                div.on('click',function(e){
+                div.on('click', function (e) {
                     annotation.isComment = true;
                 });
                 $(field).parent().find('.annotator-controls').prepend(div);
@@ -94,10 +94,11 @@ Annotator.Plugin.Properties = (function (_super) {
                         var html = '<ul style="padding:0px; margin:15px 0px 10px; list-style:none">';
                         annotation.comments.forEach(function (comment, i) {
                             if (comment.text) {
-                                html += '<li data-id="'+i+'" style="padding:10px 10px 10px 15px">' +
-                                    comment.text + '<br/>- ' +
-                                    comment.added_by.name + ' / ' +
-                                    comment.added_at +
+                                var date = moment(parseInt(comment.added_at));
+                                html += '<li data-id="' + i + '" style="padding:10px 10px 10px 15px">' +
+                                    comment.text + '<br/> By ' +
+                                    comment.added_by.name + ' at ' +
+                                    date.format('h:m a, MMM D, Y') +
                                     '<span class="annotator-item-controls">' +
                                     '<button title="Edit Comment" class="annotator-edit">Edit</button>' +
                                     '<button title="Delete Comment" class="annotator-comment-delete">Delete</button>' +
@@ -108,16 +109,16 @@ Annotator.Plugin.Properties = (function (_super) {
                         html += '</ul>';
                         $(field).css('padding', '0px').html(html);
                         $(field).parent().find('div:first').hide();
-                         $(field).find('.annotator-edit').on('click', function(){
+                        $(field).find('.annotator-edit').on('click', function () {
                             var parent = $(this).parent().parent();
                             var id = parent.data('id');
-                            annotation.isComment = {id};
-                         });
-                        $(field).find('.annotator-comment-delete').on('click', function(){
-                            if(confirm('Do you want to delete this comment?')){
+                            annotation.isComment = { id };
+                        });
+                        $(field).find('.annotator-comment-delete').on('click', function () {
+                            if (confirm('Do you want to delete this comment?')) {
                                 var parent = $(this).parent().parent();
                                 var id = parent.data('id');
-                                annotation.comments = annotation.comments.filter((v,i)=>i!==id);
+                                annotation.comments = annotation.comments.filter((v, i) => i !== id);
                                 parent.remove();
                                 self.annotator.plugins.Store.annotationUpdated(annotation);
                                 self.annotator.viewer.hide();
@@ -132,9 +133,9 @@ Annotator.Plugin.Properties = (function (_super) {
 
         this.annotator.editor.addField({
             load: function (el, annotation) {
-                 $(el).parent().find('textarea').parent().show();
+                $(el).parent().find('textarea').parent().show();
 
-                annotation.properties = annotation.properties ? annotation.properties:{};
+                annotation.properties = annotation.properties ? annotation.properties : {};
 
                 if (annotation.shapes) {
                     $(el).show();
@@ -144,9 +145,9 @@ Annotator.Plugin.Properties = (function (_super) {
                     $(el).hide();
                 }
 
-                if(annotation.isComment){
+                if (annotation.isComment) {
                     var text = '';
-                    if(annotation.comments && annotation.comments[annotation.isComment.id]){
+                    if (annotation.comments && annotation.comments[annotation.isComment.id]) {
                         text = annotation.comments[annotation.isComment.id].text;
                     }
                     $(el).parent().find('textarea').val(text);
@@ -155,7 +156,7 @@ Annotator.Plugin.Properties = (function (_super) {
                     return;
                 }
 
-                if(annotation.id){
+                if (annotation.id) {
                     $(el).parent().find('textarea').parent().hide();
                     $(el).show();
                     return;
@@ -163,9 +164,9 @@ Annotator.Plugin.Properties = (function (_super) {
             },
             submit: function (el, annotation) {
                 if (annotation.text) {
-                    if(annotation.comments && annotation.comments[annotation.isComment.id]){
+                    if (annotation.comments && annotation.comments[annotation.isComment.id]) {
                         annotation.comments[annotation.isComment.id].text = annotation.text;
-                    }else{
+                    } else {
                         comment = { text: annotation.text, added_by: USER, added_at: Date.now() };
                         if (!annotation.comments) {
                             annotation.comments = [comment];

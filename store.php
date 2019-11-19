@@ -17,34 +17,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_GET['stamp'] == '1') {
         $stamp = $_POST;
         if (!$stamp['id']) {
-           $stamp['id'] = rand();
-           $stamps[]=$stamp;
-        }else{
-            foreach($stamps as &$s){
-                if($s->id == $stamp['id']){
+            $stamp['id'] = rand();
+            $stamps[] = $stamp;
+        } else {
+            foreach ($stamps as &$s) {
+                if ($s->id == $stamp['id']) {
                     $s = $stamp;
                 }
             }
         }
         file_put_contents('./stamp.json', json_encode($stamps));
         echo json_encode($stamp);
-    }else{
+    } else {
         try {
-        $annotation = json_decode(file_get_contents("php://input"), true);
-        if (!$annotation['id']) {
-            $annotation['id'] = rand();
-        }
-
-        $comments = [];
-        foreach ($annotation['comments'] as $comment) {
-            if ($comment && isset($comment['text'])) {
-                $comment->added_by = $comment->added_by->aid;
-                $comments[] = $comment;
+            $annotation = json_decode(file_get_contents("php://input"), true);
+            if (!$annotation['id']) {
+                $annotation['id'] = rand();
             }
-        }
-        $annotation['comments'] = $comments;
-        $annotations[] = $annotation;
-        file_put_contents('./annotation.json', json_encode($annotations));
+
+            $comments = [];
+            foreach ($annotation['comments'] as $comment) {
+                if ($comment && isset($comment['text'])) {
+                    $comment->added_by = $comment->added_by->aid;
+                    $comments[] = $comment;
+                }
+            }
+            $annotation['comments'] = $comments;
+            $annotations[] = $annotation;
+            file_put_contents('./annotation.json', json_encode($annotations));
         } catch (Exception $e) {
             var_dump($e);
         }
@@ -52,9 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['status' => 'success', 'id' => $annotation['id']]);
     }
 } else if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    if($_GET['stamp'] ==1){
-        parse_str(file_get_contents("php://input"),$stamp);
-         $stampNew = [];
+    if ($_GET['stamp'] == 1) {
+        parse_str(file_get_contents("php://input"), $stamp);
+        $stampNew = [];
 
         foreach ($stamps as $key => $val) {
             if ($stamp['id'] != $val->id) {
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         file_put_contents('./stamp.json', json_encode($stampNew));
         echo json_encode(['status' => $stampNew]);
-    }else if ($_GET['annotations'] === 'all') {
+    } else if ($_GET['annotations'] === 'all') {
         file_put_contents('./annotation.json', json_encode([]));
         echo json_encode(['status' => 'success']);
     } else {
@@ -106,12 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $page = $_GET['page'];
         foreach ($stamps as $a) {
             if ($a->page == $page) {
+                $a->added_by = ['id' => $a->added_by, 'name' => 'Admin'];
                 $new[] = $a;
             }
         }
 
         echo json_encode(['total' => count($new), 'rows' => $new]);
-    }else{
+    } else {
         $page = $_GET['page'];
         $q = $_GET['search'];
         $new = [];

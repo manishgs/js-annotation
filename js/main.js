@@ -2,8 +2,9 @@ function saveStamp(el, data) {
     if (el.data('stamp')) {
         data.id = el.data('stamp').id;
     }
-    data.userId = USER.id;
+    data.added_by = USER.id;
     data.pdfId = PDF.id;
+    data.date = Date.now();
     $.ajax({
         method: "POST",
         url: "./store.php?stamp=1",
@@ -37,7 +38,7 @@ function renderStamp(shape, draggable) {
     var div = $('<div class="stamp"></div>');
     div.css(shape);
     div.html(draggable);
-    var trash = $('<i class="fa fa-trash" aria-hidden="true"></i>');
+    var trash = $('<img src="./images/trash.svg" class="delete-stamp" />');
     trash.on('click', function () {
         var stamp = $(this).parent().data('stamp');
         $(this).parent().remove();
@@ -63,9 +64,13 @@ function stampDraggable(el, shape) {
     });
 }
 
+function getDateFormat(timestamp) {
+    var date = moment(parseInt(timestamp));
+    return date.format('h:m a, MMM D, Y');
+}
+
 
 $(document).on('ready', function () {
-
     Annotator.Viewer.prototype.onDeleteClick = function (event) {
         if (confirm('Do you want to delete this annotation along with comments?')) {
             return this.onButtonClick(event, "delete")
@@ -122,7 +127,8 @@ $(document).on('ready', function () {
         loadStamp(num, function (data) {
             if (data.rows && data.rows.length) {
                 data.rows.forEach(function (v, i) {
-                    var stamp = $('<img data-type="' + v.type + '" src="./images/stamp/' + v.type + '.jpg">')
+                    var stamp = $('<div class= "stamp-block stamp-' + v.type + '" data-type="' + v.type + '" > ' + v.type + '</div>');
+                    stamp.append('<span>by ' + v.added_by.name + ' at ' + getDateFormat(v.date) + ' </span>')
                     var div = renderStamp({
                         top: v.top + 'px',
                         left: v.left + 'px'
@@ -147,6 +153,8 @@ $(document).on('ready', function () {
                     top: offset.top - (content.offset().top + 10),
                     left: offset.left - (content.offset().left + 10)
                 }
+
+                draggable.append('<span>by ' + USER.name + ' at ' + getDateFormat(Date.now()) + ' </span>')
                 var div = renderStamp(shape, draggable);
                 droppable.parent().prepend(div);
                 shape.type = draggable.data('type');
