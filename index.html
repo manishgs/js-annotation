@@ -34,7 +34,7 @@
   <script>
     var USER = { id: 1, name: 'Admin' };
     var MODE = 'text';
-    var PDF_URL = 'test.pdf';
+    var PDF = { id: '123', url: 'test.pdf' };
     var WORKER_URL = 'js/pdf.worker.js';
     var PAGE_TITLE = 'PDF annotations';
   </script>
@@ -259,7 +259,7 @@
                 placeholder="Search Annotations" />
               <div class="findbar annotationsearchList doorHanger" id="findbar">
               </div>
-              <button title="Delete all annotation" data-mode="text" class="toolbarButton deleteAnnotations">
+              <button title="Delete all annotation" class="toolbarButton deleteAnnotations">
                 <i class="fa fa-trash" aria-hidden="true"></i>
               </button>
               <button title="Text annotation" data-mode="text" class="toolbarButton toggleMode mode-text">
@@ -267,11 +267,26 @@
               </button>
               <div class="splitToolbarButtonSeparator"></div>
               <button title="Draw rectangle" data-mode="rectangle" class="toolbarButton toggleMode mode-shape">
-                <i class="fa fa-square-o" aria-hidden="true"></i>
+                <img src="./images/rectangle.svg" style="width: 13px;" />
               </button>
               <button title="Draw circle" data-mode="circle" class="toolbarButton toggleMode mode-shape">
-                <i class="fa fa-circle-o" aria-hidden="true"></i>
+                <img src="./images/circle.svg" style="width: 13px;" />
               </button>
+              <div style="position:relative">
+                <button title="Insert stamp" class="toolbarButton botton-stamp">
+                  Stamp
+                </button>
+                <div class="findbar doorHanger stamp-collection" id="findbar" style="display:none; position: absolute; left:0px; min-width: 240px;">
+                  <ul class="stamp-list">
+                    <li><img class="stamp-item" data-type="approved"
+                        src="https://p7.hiclipart.com/preview/774/758/558/5bbefbd35e490.jpg" /></li>
+                    <li><img class="stamp-item" data-type="rejected"
+                        src="https://p7.hiclipart.com/preview/774/758/558/5bbefbd35e490.jpg" /></li>
+                    <li><img class="stamp-item" data-type="Count"
+                        src="https://p7.hiclipart.com/preview/774/758/558/5bbefbd35e490.jpg" /></li>
+                  </ul>
+                </div>
+              </div>
               <div class="splitToolbarButton">
                 <button id="zoomOut" class="toolbarButton zoomOut" title="Zoom Out" tabindex="21"
                   data-l10n-id="zoom_out">

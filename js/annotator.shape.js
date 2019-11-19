@@ -39,8 +39,19 @@ Annotator.Plugin.Shape = (function (_super) {
         var enableDragableResizable = function (annotation) {
             if (!annotation.shapes) return;
             var el = $('.annotator-' + annotation.id);
-            el.resizable({ helper: "ui-resizable-helper", stop: updateChange });
-            el.draggable({ cursor: "move", scroll: true, stop: updateChange });
+            el.resizable({
+                helper: "ui-resizable-helper",
+                stop: updateChange,
+                maxWidth: el.parent().width(),
+                minHeight: 20,
+                minWidth: 20,
+            });
+            el.draggable({
+                containment: "parent",
+                cursor: "move",
+                scroll: true,
+                stop: updateChange,
+            });
         };
 
         var disableAnnotation = function () {

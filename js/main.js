@@ -1,7 +1,22 @@
 $(document).on('ready', function () {
+
+    Annotator.Viewer.prototype.onDeleteClick = function (event) {
+        if (confirm('Do you want to delete this annotation along with comments?')) {
+            return this.onButtonClick(event,"delete")
+        }
+    };
+
+    $('.botton-stamp').on('click', function () {
+        $('.stamp-collection').toggle();
+    })
+    $(".stamp-item").draggable({
+        helper: 'clone',
+        cursor: 'move',
+    });
+
     document.addEventListener('load', function () {
         PDFViewerApplicationOptions.set('workerSrc', WORKER_URL);
-        PDFViewerApplicationOptions.set('defaultUrl', PDF_URL);
+        PDFViewerApplicationOptions.set('defaultUrl', PDF.url);
     }, true);
 
     document.addEventListener('documentloaded', function (params) {
@@ -29,12 +44,66 @@ $(document).on('ready', function () {
         content.annotator('addPlugin', 'Store', {
             prefix: 'store.php?action=',
             annotationData: {
-                'page': num
+                'page': num,
+                'pdfId': PDF.id
             },
             loadFromSearch: {
-                'page': num
+                'page': num,
+                'pdfId': PDF.id
             }
         });
+
+        content.find('.annotator-wrapper').droppable({
+            accept: '.stamp-item',
+            activeClass: "drop-area",
+            drop: function (e, ui) {
+                var droppable = $(this);
+                var draggable = ui.draggable.clone();
+
+                draggable.removeClass('stamp-item').removeClass('ui-draggable').removeClass('ui-draggable-handle');
+                var div = $('<div class="stamp"></div>');
+
+                var offset = $('.ui-draggable-dragging').offset();
+                var shape = {
+                    top: offset.top - (content.offset().top + 10),
+                    left: offset.left - (content.offset().left + 10)
+                }
+                div.css(shape);
+                div.html(draggable);
+                var trash = $('<i class="fa fa-trash" aria-hidden="true"></i>');
+                trash.on('click', function () {
+                    $(this).parent().remove();
+                });
+                div.prepend(trash);
+                droppable.parent().prepend(div);
+
+
+                shape.type = draggable.data('type');
+                shape.page = num;
+                saveStamp(shape);
+
+                setTimeout(() => {
+                    $('.stamp').draggable({
+                        containment: "parent",
+                        cursor: "move",
+                        scroll: true,
+                        stop: function (e) {
+                            var el = $(e.target);
+                            shape.top = el.offset().top;
+                            shape.left = el.offset().left;
+                            saveStamp(shape);
+                        },
+                    });
+                }, 100);
+                $('.stamp-collection').hide();
+            }
+        });
+
+        function saveStamp(d) {
+            d.user = USER.id;
+            d.pdfId = PDF.id;
+            console.log(d)
+        }
 
         content.data('annotator').subscribe("annotationsLoaded", function (annotation) {
             if (annotation.length && highlightAnnotation && highlightAnnotation.page === num) {
@@ -127,13 +196,13 @@ $(document).on('ready', function () {
                 method: "GET",
                 url: "./store.php?search=" + q
             }).done(function (data) {
-                var str = '<ul>';
+                var str = '<ul class="annotation-list">';
                 var foundIds = [];
                 $.each(data.rows, function (k, v) {
                     for (var comment of v.comments) {
                         if (!foundIds.includes(v.id) && comment.text.toLowerCase().includes(q.toLowerCase())) {
                             foundIds.push(v.id);
-                            str += '<li class="annotation-item" data-page="' + v.page + '" data-id="' + v.id + '" data-annotation="' + v.id + '" ><span>' + v.page + '</span>' + comment.text + '</li>'
+                            str += '<li class="item" data-page="' + v.page + '" data-id="' + v.id + '" data-annotation="' + v.id + '" ><span>' + v.page + '</span>' + comment.text + '</li>'
                         }
                     }
                 });
@@ -163,7 +232,7 @@ $(document).on('ready', function () {
         }
     });
 
-    $(document).on('click', '.annotation-item', function () {
+    $(document).on('click', '.annotation-list .item', function () {
         $('.annotator-viewer').addClass('annotator-hide');
         $('.annotationsearchList').hide();
         var id = $(this).data('id');

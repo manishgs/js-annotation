@@ -67,6 +67,12 @@ Annotator.Plugin.Properties = (function (_super) {
         var self = this;
         this.annotator.subscribe("annotationCreated", updateProperties);
         this.annotator.subscribe("annotationUpdated", updateProperties);
+        this.annotator.subscribe("annotationUpdated", updateProperties);
+        this.annotator.subscribe("annotationEditorHidden", function(editor){
+                delete editor.annotation.text;
+                delete editor.annotation.isComment;
+        });
+
         this.annotator.subscribe("annotationsLoaded", function (annotations) {
             annotations.forEach(function (ann) {
                 if (ann.ranges) {
@@ -77,18 +83,46 @@ Annotator.Plugin.Properties = (function (_super) {
 
         this.annotator.viewer.addField({
             load: function (field, annotation) {
+                var div = $('<button title="Add comment" class="annotator-edit annotator-add">Add comment</button>');
+                div.on('click',function(e){
+                    annotation.isComment = true;
+                });
+                $(field).parent().find('.annotator-controls').prepend(div);
                 if (annotation.comments && annotation.comments.length) {
                     annotation.comments = annotation.comments.filter(c => c.text);
                     if (annotation.comments.length) {
-                        var html = '<ul style="padding:0px">';
-                        annotation.comments.forEach(function (comment) {
+                        var html = '<ul style="padding:0px; margin:15px 0px 10px; list-style:none">';
+                        annotation.comments.forEach(function (comment, i) {
                             if (comment.text) {
-                                html += '<li style="padding:10px">' + comment.text + '<br/>- ' + comment.added_by.name + ' / ' + comment.added_at + '</li>';
+                                html += '<li data-id="'+i+'" style="padding:10px 10px 10px 15px">' +
+                                    comment.text + '<br/>- ' +
+                                    comment.added_by.name + ' / ' +
+                                    comment.added_at +
+                                    '<span class="annotator-item-controls">' +
+                                    '<button title="Edit Comment" class="annotator-edit">Edit</button>' +
+                                    '<button title="Delete Comment" class="annotator-comment-delete">Delete</button>' +
+                                    '</span>' +
+                                    '</li>';
                             }
                         });
                         html += '</ul>';
                         $(field).css('padding', '0px').html(html);
                         $(field).parent().find('div:first').hide();
+                         $(field).find('.annotator-edit').on('click', function(){
+                            var parent = $(this).parent().parent();
+                            var id = parent.data('id');
+                            annotation.isComment = {id};
+                         });
+                        $(field).find('.annotator-comment-delete').on('click', function(){
+                            if(confirm('Do you want to delete this comment?')){
+                                var parent = $(this).parent().parent();
+                                var id = parent.data('id');
+                                annotation.comments = annotation.comments.filter((v,i)=>i!==id);
+                                parent.remove();
+                                self.annotator.plugins.Store.annotationUpdated(annotation);
+                                self.annotator.viewer.hide();
+                            }
+                        })
                     }
                 } else {
                     $(field).remove();
@@ -98,9 +132,9 @@ Annotator.Plugin.Properties = (function (_super) {
 
         this.annotator.editor.addField({
             load: function (el, annotation) {
-                if (!annotation.properties) {
-                    annotation.properties = {};
-                }
+                 $(el).parent().find('textarea').parent().show();
+
+                annotation.properties = annotation.properties ? annotation.properties:{};
 
                 if (annotation.shapes) {
                     $(el).show();
@@ -109,18 +143,41 @@ Annotator.Plugin.Properties = (function (_super) {
                 } else {
                     $(el).hide();
                 }
+
+                if(annotation.isComment){
+                    var text = '';
+                    if(annotation.comments && annotation.comments[annotation.isComment.id]){
+                        text = annotation.comments[annotation.isComment.id].text;
+                    }
+                    $(el).parent().find('textarea').val(text);
+                    $(el).parent().find('textarea').parent().show();
+                    $(el).hide();
+                    return;
+                }
+
+                if(annotation.id){
+                    $(el).parent().find('textarea').parent().hide();
+                    $(el).show();
+                    return;
+                }
             },
             submit: function (el, annotation) {
                 if (annotation.text) {
-                    comment = { text: annotation.text, added_by: USER, added_at: Date.now() };
-                    if (!annotation.comments) {
-                        annotation.comments = [comment];
-                    } else {
-                        annotation.comments.push(comment);
+                    if(annotation.comments && annotation.comments[annotation.isComment.id]){
+                        annotation.comments[annotation.isComment.id].text = annotation.text;
+                    }else{
+                        comment = { text: annotation.text, added_by: USER, added_at: Date.now() };
+                        if (!annotation.comments) {
+                            annotation.comments = [comment];
+                        } else {
+                            annotation.comments.push(comment);
+                        }
                     }
                 }
 
                 delete annotation.text;
+                delete annotation.isComment;
+                delete annotation.selected;
             }
         });
 
@@ -128,10 +185,10 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'Border',
             type: 'input',
             load: function (el, annotation) {
-                if (annotation.shapes) {
+                $(el).addClass('annotation-border-color');
+                self.updateBorderColor(el, annotation);
+                if (annotation.shapes && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-border-color');
-                    self.updateBorderColor(el, annotation);
                 } else {
                     $(el).hide();
                 }
@@ -148,10 +205,10 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'Fill',
             type: 'input',
             load: function (el, annotation) {
-                if (annotation.shapes) {
+                $(el).addClass('annotation-fill-color');
+                self.updateFillColor(el, annotation);
+                if (annotation.shapes && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-fill-color');
-                    self.updateFillColor(el, annotation);
                 } else {
                     $(el).hide();
                 }
@@ -167,10 +224,10 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'highlight',
             type: 'input',
             load: function (el, annotation) {
-                if (annotation.ranges) {
+                $(el).addClass('annotation-text-highlight');
+                self.updateHighlightColor(el, annotation);
+                if (annotation.ranges && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-text-highlight');
-                    self.updateHighlightColor(el, annotation);
                 } else {
                     $(el).hide();
                 }
@@ -186,10 +243,10 @@ Annotator.Plugin.Properties = (function (_super) {
         this.annotator.editor.addField({
             type: 'input',
             load: function (el, annotation) {
-                if (annotation.shapes) {
+                $(el).addClass('annotation-border-width');
+                self.updateBorderWidth(el, annotation);
+                if (annotation.shapes && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-border-width');
-                    self.updateBorderWidth(el, annotation);
                 } else {
                     $(el).hide();
                 }
@@ -206,10 +263,10 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'underline',
             type: 'checkbox',
             load: function (el, annotation) {
-                if (annotation.ranges) {
+                $(el).addClass('annotation-text-underline');
+                self.updateUnderline(el, annotation);
+                if (annotation.ranges && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-text-underline');
-                    self.updateUnderline(el, annotation);
                 } else {
                     $(el).hide();
                 }
@@ -225,15 +282,16 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'strikeThrough',
             type: 'checkbox',
             load: function (el, annotation) {
-                if (annotation.ranges) {
+                $(el).addClass('annotation-text-strikethrough');
+                self.updateStrikeThrough(el, annotation);
+                if (annotation.ranges && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-text-strikethrough');
-                    self.updateStrikeThrough(el, annotation);
                 } else {
                     $(el).hide();
                 }
             },
             submit: function (el, annotation) {
+                console.log(annotation);
                 if (annotation.ranges) {
                     self.saveStrikeThrough(el, annotation);
                 }
@@ -244,10 +302,10 @@ Annotator.Plugin.Properties = (function (_super) {
             label: 'redaction',
             type: 'checkbox',
             load: function (el, annotation) {
-                if (annotation.ranges) {
+                $(el).addClass('annotation-text-redaction');
+                self.updateRedaction(el, annotation);
+                if (annotation.ranges && !annotation.isComment) {
                     $(el).show();
-                    $(el).addClass('annotation-text-redaction');
-                    self.updateRedaction(el, annotation);
                 } else {
                     $(el).hide();
                 }
